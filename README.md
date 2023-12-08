@@ -15,7 +15,7 @@ then automatically derive:
 - ...which uses content-addressing to automatically de-duplicate dag-shaped data and minimize data transfer
 - ...which is bundled with offline-first, but realtime-ready change management, for correct synchronization across multiple parties.
 
-When it's time to change your mind about how to structure your data, then write 
+When it's time to change your mind about how to structure your data, write a well-typed migration so that you can keep using your old data with the new schema.
 
 Interested? Let's get started.
 
