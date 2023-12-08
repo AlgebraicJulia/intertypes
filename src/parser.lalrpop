@@ -1,0 +1,53 @@
+use crate::syntax::*;
+use crate::syntax;
+
+grammar<'state>(ps: &'state mut ParserState);
+
+Sp<Rule>: Spanned<Rule> = {
+  <l:@L> <x:Rule> <r: @R> => Spanned::new(x, (l..r).into())
+};
+
+SepSlice1<Rule, Separator>: Vec<Rule> = {
+  <start: ((<Rule> Separator)+)?> <last: Rule> => {
+    match start {
+      Some(mut start) => { start.push(last); start }
+      None => vec![last]
+    }
+  }
+};
+
+pub TypeExpr: TypeExpr<Sym> = {
+  <sid:Sp<Sym>> <fields: ("." <Sp<Sym>>)*> =>
+    TypeExpr::Path(sid, fields),
+  <ste:Sp<TypeExpr>> "[" <args: SepSlice1<Sp<TypeExpr>, ",">> "]" =>
+    TypeExpr::App(Box::new(ste), args),
+  <dom:Sp<TypeExpr>> "->" <codom:Sp<TypeExpr>> =>
+    TypeExpr::Arrow(Box::new(dom), Box::new(codom)),
+  "fintype" => TypeExpr::FinType
+};
+
+pub TypeDef: TypeDef<Sym> = {
+  "type" <name:Sp<Sym>> "=" <typ:Sp<TypeExpr>> =>
+    TypeDef::new(name, vec![], TypeDefBody::Alias(typ)),
+  "record" <name:Sp<Sym>> "{" <fields: (<Field> ";")*> "}" =>
+    TypeDef::new(name, vec![], TypeDefBody::Record(fields)),
+  "sum" <name:Sp<Sym>> "{" <variants: (<Variant> ";")*> "}" =>
+     TypeDef::new(name, vec![], TypeDefBody::Sum(variants))
+};
+
+Field: Field<Sym> = {
+  <Sp<Sym>> ":" <Sp<TypeExpr>> => Field::new(<>)
+};
+
+Variant: Variant<Sym> = {
+  <name:Sp<Sym>> "{" <fields: (<Field> ";")*> "}" =>
+    Variant::new(name, fields)
+};
+
+Sym: Sym = {
+  r"[a-zA-Z][a-zA-Z0-9]*" => ps.intern(<>)
+};
+
+extern {
+  type Error = syntax::Error;
+}

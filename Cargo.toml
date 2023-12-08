@@ -1,0 +1,43 @@
+[package]
+name = "intertypes"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["The AlgebraicJulia project"]
+description = "cross-language, change-aware type definitions"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+thiserror = "1"
+indexmap = "2"
+lasso = "0.7"
+nonempty = "0.9"
+
+[dependencies.clap]
+version = "4"
+features = ["derive", "cargo"]
+
+[dependencies.regex]
+version = "1"
+features = ["unicode-perl"]
+
+[dependencies.lalrpop-util]
+version = "0.20"
+features = ["lexer"]
+
+[dependencies.miette]
+version = "5"
+features = ["fancy"]
+
+[dependencies.tinyvec]
+version = "1"
+features = ["alloc"]
+
+[dependencies.uuid]
+version = "1"
+features = ["v7"]
+
+[build-dependencies]
+lalrpop = "0.20"
