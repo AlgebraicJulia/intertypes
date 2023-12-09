@@ -16,14 +16,18 @@ SepSlice1<Rule, Separator>: Vec<Rule> = {
   }
 };
 
-pub TypeExpr: TypeExpr<Sym> = {
+pub TypeArgExpr: TypeExpr<Sym> = {
   <sid:Sp<Sym>> <fields: ("." <Sp<Sym>>)*> =>
     TypeExpr::Path(sid, fields),
-  <ste:Sp<TypeExpr>> "[" <args: SepSlice1<Sp<TypeExpr>, ",">> "]" =>
+  <ste:Sp<TypeArgExpr>> "[" <args: SepSlice1<Sp<TypeExpr>, ",">> "]" =>
     TypeExpr::App(Box::new(ste), args),
-  <dom:Sp<TypeExpr>> "->" <codom:Sp<TypeExpr>> =>
-    TypeExpr::Arrow(Box::new(dom), Box::new(codom)),
   "fintype" => TypeExpr::FinType
+}
+
+pub TypeExpr: TypeExpr<Sym> = {
+  <TypeArgExpr>,
+  <dom:Sp<TypeArgExpr>> "->" <codom:Sp<TypeExpr>> =>
+    TypeExpr::Arrow(Box::new(dom), Box::new(codom)),
 };
 
 pub TypeDef: TypeDef<Sym> = {
