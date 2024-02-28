@@ -13,9 +13,9 @@ them by index in that table. The process of storing a string in that table is
 known as "interning". The advantage of this is reduced usage of memory. The
 disadvantage is that one must keep around a reference to that big table.
 
-Within `lasso`, [`Spur`] is the type of an interned symbol (it is essentially a
+Within `lasso`, [`lasso::Spur`] is the type of an interned symbol (it is essentially a
 `u32`), and [`Rodeo`] is the type of the big table. We type alias [`Sym`] to
-[`Spur`].
+[`lasso::Spur`].
 
 **Questions about use of Lasso**
 
@@ -47,6 +47,43 @@ Perhaps one way of doing this is to have an "error" syntax node.
 
 - To what extent does the functionality of thiserror overlap with miette? It
 would be good to pin this down.
+
+# Notes on possible improvements
+
+## Identifiers
+
+Right now, we just use [`Sym`] for identifiers.
+
+There are certain things, like field names and paths which should always be
+`Sym`. However, at some point we may want to scope-resolve top-level identifiers
+via a scope tag system a la [GATlab][1] or some kind of deBruijn indexing.
+
+Thus, we may want to make [`TypeExpr`] et al generic over the type of identifier.
+
+## Spans
+
+Right now, we are quite liberal in our use of [`Spanned`]. The idea is to be able
+to give very good error messages, but right now we aren't using that for anything.
+
+It may be better to take a more conservative approach, where we only add
+[`Spanned`] when we need to in order to produce a certain error message.
+
+## Error nodes
+
+One way of being better at reporting errors is to have some kind of "error
+syntax node" which allows you to keep parsing the rest of the document. Then you
+can report all of the error nodes at once instead of one at a time. We should
+definitely implement this at some point.
+
+## Docs
+
+We should be able to document types, fields of types, etc. with docstrings.
+
+[1]: https://github.com/AlgebraicJulia/GATlab.jl/blob/main/src/syntax/Scopes.jl
+
+## Type migrations
+
+Eventually, we want to do type migrations. How does that affect the design?
 */
 
 #![allow(dead_code)]
@@ -100,6 +137,10 @@ pub enum Primitive {
     Void,
 }
 
+/**
+A syntax expression along with the span of text where the syntax expression
+comes from.
+*/
 #[derive(PartialEq, Eq, Debug)]
 pub struct Spanned<T> {
     pub val: T,
@@ -112,57 +153,103 @@ impl<T> Spanned<T> {
     }
 }
 
+/**
+An expression denoting a type. Used, e.g. for the fields of structs.
+*/
 #[derive(PartialEq, Eq, Debug)]
-pub enum TypeExpr<N> {
-    App(Box<Spanned<TypeExpr<N>>>, Vec<Spanned<TypeExpr<N>>>),
-    Path(Spanned<N>, Vec<Spanned<N>>),
-    Arrow(Box<Spanned<TypeExpr<N>>>, Box<Spanned<TypeExpr<N>>>),
+pub enum TypeExpr {
+    /** An application of a generic type to arguments */
+    App(Box<Spanned<TypeExpr>>, Vec<Spanned<TypeExpr>>),
+    /** A dotted path of the form a.b.c */
+    Path(Spanned<Sym>, Vec<Spanned<Sym>>),
+    /** A function type */
+    Arrow(Box<Spanned<TypeExpr>>, Box<Spanned<TypeExpr>>),
+    /**
+    The type of finite sets.
+
+    Should this even be a type? Aren't we using some sort of kind system?
+    */
     FinType,
 }
 
+/**
+A field within a struct or variant.
+
+**Questions**
+- Should we allow unnamed fields?
+
+**Notes**
+- Even when we move to using identifiers for some things, the name of the field
+should remain a [`Sym`] because it does not need to be lexically resolved ever.
+*/
 #[derive(PartialEq, Eq, Debug)]
-pub struct Field<N> {
-    name: Spanned<N>,
-    typ: Spanned<TypeExpr<N>>,
+pub struct Field {
+    name: Spanned<Sym>,
+    typ: Spanned<TypeExpr>,
 }
 
-impl<N> Field<N> {
-    pub fn new(name: Spanned<N>, typ: Spanned<TypeExpr<N>>) -> Self {
+impl Field {
+    pub fn new(name: Spanned<Sym>, typ: Spanned<TypeExpr>) -> Self {
         Field { name, typ }
     }
 }
 
+/**
+A variant of a sum type, used in [`TypeDefBody::Sum`].
+*/
 #[derive(PartialEq, Eq, Debug)]
-pub struct Variant<N> {
-    name: Spanned<N>,
-    fields: Vec<Field<N>>,
+pub struct Variant {
+    name: Spanned<Sym>,
+    fields: Vec<Field>,
 }
 
-impl<N> Variant<N> {
-    pub fn new(name: Spanned<N>, fields: Vec<Field<N>>) -> Self {
+impl Variant {
+    pub fn new(name: Spanned<Sym>, fields: Vec<Field>) -> Self {
         Variant { name, fields }
     }
 }
 
+/**
+The content of a [`TypeDef`]
+
+Note: right now it is convenient to make [`TypeDef`] a struct with some common
+parameters, and then the parts that vary between sum/record/alias extracted out
+to here. Maybe this isn't quite what we want: maybe we instead just want to have
+[`TypeDef`] itself be an enum?
+*/
 #[derive(PartialEq, Eq, Debug)]
-pub enum TypeDefBody<N> {
-    Alias(Spanned<TypeExpr<N>>),
-    Record(Vec<Field<N>>),
-    Sum(Vec<Variant<N>>),
+pub enum TypeDefBody {
+    Alias(Spanned<TypeExpr>),
+    Record(Vec<Field>),
+    Sum(Vec<Variant>),
 }
 
-pub struct TypeDef<N> {
-    name: Spanned<N>,
-    vars: Vec<Spanned<N>>,
-    body: TypeDefBody<N>,
+/**
+A type definition.
+
+Intertypes is a nominal type system, so this doesn't just make a new definition
+it actually creates a new type, like Haskell's `data` or Julia's `struct`.
+*/
+pub struct TypeDef {
+    /// The name of the new type
+    name: Spanned<Sym>,
+    /// The arguments to the new type (if non-empty, this is a generic type)
+    args: Vec<Spanned<Sym>>,
+    /// The content of the type definition (alias/record/sum)
+    body: TypeDefBody,
 }
 
-impl<N> TypeDef<N> {
-    pub fn new(name: Spanned<N>, vars: Vec<Spanned<N>>, body: TypeDefBody<N>) -> Self {
-        TypeDef { name, vars, body }
+impl TypeDef {
+    pub fn new(name: Spanned<Sym>, args: Vec<Spanned<Sym>>, body: TypeDefBody) -> Self {
+        TypeDef { name, args, body }
     }
 }
 
+/**
+This type is currently for all custom errors that we might want to throw.
+
+We use [`miette`]'s `#[diagnostic(...)] macro to make this print out nicely.
+*/
 #[derive(Debug, Error, Diagnostic)]
 pub enum Error {
     #[diagnostic(code(name_error))]

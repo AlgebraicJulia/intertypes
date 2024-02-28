@@ -16,7 +16,7 @@ SepSlice1<Rule, Separator>: Vec<Rule> = {
   }
 };
 
-pub TypeArgExpr: TypeExpr<Sym> = {
+pub TypeArgExpr: TypeExpr = {
   <sid:Sp<Sym>> <fields: ("." <Sp<Sym>>)*> =>
     TypeExpr::Path(sid, fields),
   <ste:Sp<TypeArgExpr>> "[" <args: SepSlice1<Sp<TypeExpr>, ",">> "]" =>
@@ -24,13 +24,13 @@ pub TypeArgExpr: TypeExpr<Sym> = {
   "fintype" => TypeExpr::FinType
 }
 
-pub TypeExpr: TypeExpr<Sym> = {
+pub TypeExpr: TypeExpr = {
   <TypeArgExpr>,
   <dom:Sp<TypeArgExpr>> "->" <codom:Sp<TypeExpr>> =>
     TypeExpr::Arrow(Box::new(dom), Box::new(codom)),
 };
 
-pub TypeDef: TypeDef<Sym> = {
+pub TypeDef: TypeDef = {
   "type" <name:Sp<Sym>> "=" <typ:Sp<TypeExpr>> =>
     TypeDef::new(name, vec![], TypeDefBody::Alias(typ)),
   "record" <name:Sp<Sym>> "{" <fields: (<Field> ";")*> "}" =>
@@ -39,11 +39,11 @@ pub TypeDef: TypeDef<Sym> = {
      TypeDef::new(name, vec![], TypeDefBody::Sum(variants))
 };
 
-Field: Field<Sym> = {
+Field: Field = {
   <Sp<Sym>> ":" <Sp<TypeExpr>> => Field::new(<>)
 };
 
-Variant: Variant<Sym> = {
+Variant: Variant = {
   <name:Sp<Sym>> "{" <fields: (<Field> ";")*> "}" =>
     Variant::new(name, fields)
 };
