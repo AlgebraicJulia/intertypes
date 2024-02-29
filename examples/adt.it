@@ -1,0 +1,10 @@
+sum Term {
+  Plus {
+    t1: Term;
+    t2: Term;
+  };
+  Times {
+    t1: Term;
+	t2: Term;
+  };
+};

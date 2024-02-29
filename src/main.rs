@@ -1,12 +1,14 @@
 use lalrpop_util::lalrpop_mod;
+use miette;
 
 mod cli;
+mod error;
 mod syntax;
 
 lalrpop_mod!(pub parser);
 
-fn main() {
-    cli::run();
+fn main() -> miette::Result<()> {
+    cli::run()
 }
 
 #[test]

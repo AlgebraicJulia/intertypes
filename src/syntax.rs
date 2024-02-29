@@ -92,8 +92,7 @@ Eventually, we want to do type migrations. How does that affect the design?
 use std::collections::HashMap;
 
 use lasso::Rodeo;
-use miette::{Diagnostic, NamedSource, SourceSpan};
-use thiserror::Error;
+use miette::{NamedSource, SourceSpan};
 
 pub type Sym = lasso::Spur;
 
@@ -230,6 +229,7 @@ A type definition.
 Intertypes is a nominal type system, so this doesn't just make a new definition
 it actually creates a new type, like Haskell's `data` or Julia's `struct`.
 */
+#[derive(PartialEq, Eq, Debug)]
 pub struct TypeDef {
     /// The name of the new type
     name: Spanned<Sym>,
@@ -243,21 +243,6 @@ impl TypeDef {
     pub fn new(name: Spanned<Sym>, args: Vec<Spanned<Sym>>, body: TypeDefBody) -> Self {
         TypeDef { name, args, body }
     }
-}
-
-/**
-This type is currently for all custom errors that we might want to throw.
-
-We use [`miette`]'s `#[diagnostic(...)] macro to make this print out nicely.
-*/
-#[derive(Debug, Error, Diagnostic)]
-pub enum Error {
-    #[diagnostic(code(name_error))]
-    #[error("Name error")]
-    NameError {
-        #[label("couldn't resolve this name")]
-        span: SourceSpan,
-    },
 }
 
 #[derive(Default)]

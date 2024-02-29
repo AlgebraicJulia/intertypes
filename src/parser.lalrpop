@@ -39,6 +39,10 @@ pub TypeDef: TypeDef = {
      TypeDef::new(name, vec![], TypeDefBody::Sum(variants))
 };
 
+pub TypeDefs: Vec<TypeDef> = {
+  (<TypeDef> ";")* => <>
+};
+
 Field: Field = {
   <Sp<Sym>> ":" <Sp<TypeExpr>> => Field::new(<>)
 };
@@ -53,5 +57,5 @@ Sym: Sym = {
 };
 
 extern {
-  type Error = syntax::Error;
+  type Error = ();
 }
