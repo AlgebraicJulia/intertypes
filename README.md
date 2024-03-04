@@ -17,13 +17,19 @@ then automatically derive:
 
 When it's time to change your mind about how to structure your data, write a well-typed migration so that you can keep using your old data with the new schema.
 
-Interested? Let's get started.
+The beginning of this project looks like this.
 
 ```
 record Graph {
-    E: fintype
-    V: fintype
-    src(e: E): V
-    tgt(e: E): V
-}
+    E: fintype;
+    V: fintype;
+    src: E -> V;
+    tgt: E -> V;
+};
 ```
+
+## Resources
+
+- [Berkeley Seminar Talk](https://forest.localcharts.org/topos-0002.xml)
+- [Stuff Calculus](https://voluble-melba-325609.netlify.app/aria-0S86.xml)
+- [ARIA Workshop II Talk](https://forest.localcharts.org/aria-0001.xml)
