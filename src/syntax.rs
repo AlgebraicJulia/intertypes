@@ -99,7 +99,7 @@ pub type Sym = lasso::Spur;
 /**
 Used to distinguish between `i32`/`i64`, `u32`/`u64`, `f32`/`f64` in [`Primitive`].
 */
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub enum BitSize {
     B32,
     B64,
@@ -108,7 +108,7 @@ pub enum BitSize {
 /**
 Used to distinguish between `u32`/`i32`, `u64`/`i64` in [`Primitive`]
 */
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub enum Signedness {
     Signed,
     Unsigned,
@@ -126,7 +126,7 @@ The standard primitive types
 - unit (containing only a single value)
 - void (containing no values)
 */
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub enum Primitive {
     Int(Signedness, BitSize),
     Float(BitSize),
@@ -157,6 +157,7 @@ An expression denoting a type. Used, e.g. for the fields of structs.
 */
 #[derive(PartialEq, Eq, Debug)]
 pub enum TypeExpr {
+    Prim(Primitive),
     /** An application of a generic type to arguments */
     App(Box<Spanned<TypeExpr>>, Vec<Spanned<TypeExpr>>),
     /** A dotted path of the form a.b.c */

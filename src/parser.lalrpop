@@ -1,4 +1,5 @@
 use crate::syntax::*;
+use crate::syntax::{Primitive::*, BitSize::*, Signedness::*};
 use crate::syntax;
 
 grammar<'state>(ps: &'state mut ParserState);
@@ -16,7 +17,21 @@ SepSlice1<Rule, Separator>: Vec<Rule> = {
   }
 };
 
+pub Primitive: Primitive = {
+  "i32" => Int(Signed, B32),
+  "u32" => Int(Unsigned, B32),
+  "i64" => Int(Signed, B64),
+  "u64" => Int(Signed, B64),
+  "f32" => Float(B32),
+  "f64" => Float(B64),
+  "string" => String,
+  "bool" => Bool,
+  "unit" => Unit,
+  "void" => Void,
+};
+
 pub TypeArgExpr: TypeExpr = {
+  <Primitive> => TypeExpr::Prim(<>),
   <sid:Sp<Sym>> <fields: ("." <Sp<Sym>>)*> =>
     TypeExpr::Path(sid, fields),
   <ste:Sp<TypeArgExpr>> "[" <args: SepSlice1<Sp<TypeExpr>, ",">> "]" =>

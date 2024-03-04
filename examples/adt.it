@@ -7,4 +7,10 @@ sum Term {
     t1: Term;
 	t2: Term;
   };
+  Const {
+    val: f64;
+  };
+  Var {
+    name: string;
+  };
 };
