@@ -30,6 +30,7 @@ record Graph {
 
 ## Resources
 
+- [chit](https://github.com/davidad/chit) (also contains a good list of papers in README)
 - [Berkeley Seminar Talk](https://forest.localcharts.org/topos-0002.xml)
 - [Stuff Calculus](https://voluble-melba-325609.netlify.app/aria-0S86.xml)
 - [ARIA Workshop II Talk](https://forest.localcharts.org/aria-0001.xml)
