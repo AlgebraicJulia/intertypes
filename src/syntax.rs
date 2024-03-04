@@ -99,7 +99,7 @@ pub type Sym = lasso::Spur;
 /**
 Used to distinguish between `i32`/`i64`, `u32`/`u64`, `f32`/`f64` in [`Primitive`].
 */
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub enum BitSize {
     B32,
     B64,
@@ -108,7 +108,7 @@ pub enum BitSize {
 /**
 Used to distinguish between `u32`/`i32`, `u64`/`i64` in [`Primitive`]
 */
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Signedness {
     Signed,
     Unsigned,
@@ -126,7 +126,7 @@ The standard primitive types
 - unit (containing only a single value)
 - void (containing no values)
 */
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Primitive {
     Int(Signedness, BitSize),
     Float(BitSize),
@@ -140,7 +140,7 @@ pub enum Primitive {
 A syntax expression along with the span of text where the syntax expression
 comes from.
 */
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub struct Spanned<T> {
     pub val: T,
     pub span: SourceSpan,
@@ -155,12 +155,20 @@ impl<T> Spanned<T> {
 /**
 An expression denoting a type. Used, e.g. for the fields of structs.
 */
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 pub enum TypeExpr {
     Prim(Primitive),
     /** An application of a generic type to arguments */
     App(Box<Spanned<TypeExpr>>, Vec<Spanned<TypeExpr>>),
-    /** A dotted path of the form a.b.c */
+    /**
+    A dotted path of the form a.b.c, or just a symbol if the second argument is empty.
+
+    The idea is to not allow the head of this to be an expression: you can only construct path
+    types starting at identifiers, not expressions.
+
+    Also, if we move to "scopetagging" identifiers in some way, only the first identifier would be
+    tagged; the path segments are just symbols
+    */
     Path(Spanned<Sym>, Vec<Spanned<Sym>>),
     /** A function type */
     Arrow(Box<Spanned<TypeExpr>>, Box<Spanned<TypeExpr>>),
@@ -182,10 +190,10 @@ A field within a struct or variant.
 - Even when we move to using identifiers for some things, the name of the field
 should remain a [`Sym`] because it does not need to be lexically resolved ever.
 */
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 pub struct Field {
-    name: Spanned<Sym>,
-    typ: Spanned<TypeExpr>,
+    pub name: Spanned<Sym>,
+    pub typ: Spanned<TypeExpr>,
 }
 
 impl Field {
@@ -195,12 +203,12 @@ impl Field {
 }
 
 /**
-A variant of a sum type, used in [`TypeDefBody::Sum`].
+A variant of a sum type, used in [`TypeDeclBody::Sum`].
 */
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 pub struct Variant {
-    name: Spanned<Sym>,
-    fields: Vec<Field>,
+    pub name: Spanned<Sym>,
+    pub fields: Vec<Field>,
 }
 
 impl Variant {
@@ -210,15 +218,15 @@ impl Variant {
 }
 
 /**
-The content of a [`TypeDef`]
+The content of a [`TypeDecl`]
 
-Note: right now it is convenient to make [`TypeDef`] a struct with some common
+Note: right now it is convenient to make [`TypeDecl`] a struct with some common
 parameters, and then the parts that vary between sum/record/alias extracted out
 to here. Maybe this isn't quite what we want: maybe we instead just want to have
-[`TypeDef`] itself be an enum?
+[`TypeDecl`] itself be an enum?
 */
-#[derive(PartialEq, Eq, Debug)]
-pub enum TypeDefBody {
+#[derive(PartialEq, Eq, Debug, Clone)]
+pub enum TypeDeclBody {
     Alias(Spanned<TypeExpr>),
     Record(Vec<Field>),
     Sum(Vec<Variant>),
@@ -230,25 +238,25 @@ A type definition.
 Intertypes is a nominal type system, so this doesn't just make a new definition
 it actually creates a new type, like Haskell's `data` or Julia's `struct`.
 */
-#[derive(PartialEq, Eq, Debug)]
-pub struct TypeDef {
+#[derive(PartialEq, Eq, Debug, Clone)]
+pub struct TypeDecl {
     /// The name of the new type
-    name: Spanned<Sym>,
+    pub name: Spanned<Sym>,
     /// The arguments to the new type (if non-empty, this is a generic type)
-    args: Vec<Spanned<Sym>>,
+    pub args: Vec<Spanned<Sym>>,
     /// The content of the type definition (alias/record/sum)
-    body: TypeDefBody,
+    pub body: TypeDeclBody,
 }
 
-impl TypeDef {
-    pub fn new(name: Spanned<Sym>, args: Vec<Spanned<Sym>>, body: TypeDefBody) -> Self {
-        TypeDef { name, args, body }
+impl TypeDecl {
+    pub fn new(name: Spanned<Sym>, args: Vec<Spanned<Sym>>, body: TypeDeclBody) -> Self {
+        TypeDecl { name, args, body }
     }
 }
 
 #[derive(Default)]
 pub struct ParserState {
-    interner: Rodeo,
+    pub interner: Rodeo,
 }
 
 impl ParserState {

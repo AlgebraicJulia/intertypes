@@ -45,17 +45,17 @@ pub TypeExpr: TypeExpr = {
     TypeExpr::Arrow(Box::new(dom), Box::new(codom)),
 };
 
-pub TypeDef: TypeDef = {
+pub TypeDecl: TypeDecl = {
   "type" <name:Sp<Sym>> "=" <typ:Sp<TypeExpr>> =>
-    TypeDef::new(name, vec![], TypeDefBody::Alias(typ)),
+    TypeDecl::new(name, vec![], TypeDeclBody::Alias(typ)),
   "record" <name:Sp<Sym>> "{" <fields: (<Field> ";")*> "}" =>
-    TypeDef::new(name, vec![], TypeDefBody::Record(fields)),
+    TypeDecl::new(name, vec![], TypeDeclBody::Record(fields)),
   "sum" <name:Sp<Sym>> "{" <variants: (<Variant> ";")*> "}" =>
-     TypeDef::new(name, vec![], TypeDefBody::Sum(variants))
+     TypeDecl::new(name, vec![], TypeDeclBody::Sum(variants))
 };
 
-pub TypeDefs: Vec<TypeDef> = {
-  (<TypeDef> ";")* => <>
+pub TypeDecls: Vec<TypeDecl> = {
+  (<TypeDecl> ";")* => <>
 };
 
 Field: Field = {

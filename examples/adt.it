@@ -5,7 +5,7 @@ sum Term {
   };
   Times {
     t1: Term;
-	t2: Term;
+    t2: Term;
   };
   Const {
     val: f64;

@@ -1,8 +1,8 @@
 use lalrpop_util::lalrpop_mod;
-use miette;
 
 mod cli;
 mod error;
+mod pprint;
 mod syntax;
 
 lalrpop_mod!(pub parser);
@@ -68,7 +68,7 @@ fn parse_app() {
 #[test]
 fn parse_point() {
     use lasso::Spur;
-    use syntax::{ParserState, TypeDef, TypeExpr};
+    use syntax::{ParserState, TypeDecl, TypeExpr};
     let mut state = ParserState::default();
     let point_def = "
         record Point {
@@ -76,7 +76,7 @@ fn parse_point() {
             y: f64;
         }
     ";
-    let def = parser::TypeDefParser::new()
+    let def = parser::TypeDeclParser::new()
         .parse(&mut state, point_def)
         .unwrap();
 }
@@ -84,9 +84,9 @@ fn parse_point() {
 #[test]
 fn parse_graph() {
     use lasso::Spur;
-    use syntax::{ParserState, TypeDef, TypeExpr};
+    use syntax::{ParserState, TypeDecl, TypeExpr};
     let mut state = ParserState::default();
-    let def = parser::TypeDefParser::new()
+    let def = parser::TypeDeclParser::new()
         .parse(
             &mut state,
             "

@@ -2,7 +2,7 @@ use crate::error::InterTypeError::{IOError, ParseError};
 use crate::parser;
 use crate::syntax::ParserState;
 use clap::Parser;
-use miette;
+use pretty::*;
 use std::fs;
 
 #[derive(Parser, Debug)]
@@ -17,15 +17,21 @@ pub fn run() -> miette::Result<()> {
 
     let mut state = ParserState::default();
 
-    let content = fs::read_to_string(args.input_file).map_err(|e| IOError(e))?;
+    let content = fs::read_to_string(args.input_file).map_err(IOError)?;
 
-    let texpr = parser::TypeDefsParser::new()
+    let tdecls = parser::TypeDeclsParser::new()
         .parse(&mut state, &content)
-        .map_err(|e| match e {
-            _ => ParseError(format!("{:?}", e)),
-        })?;
+        .map_err(|e| ParseError(format!("{:?}", e)))?;
 
-    println!("{:?}", texpr);
+    let mut w = Vec::new();
+    RcDoc::intersperse(
+        tdecls.iter().map(|tdecl| tdecl.to_doc(&state.interner)),
+        RcDoc::line().append(RcDoc::line()),
+    )
+    .render(80, &mut w)
+    .unwrap();
+
+    println!("{}", String::from_utf8(w).unwrap());
 
     Ok(())
 }

@@ -50,7 +50,7 @@
           inherit cargoArtifacts;
         });
       in
-      {
+      rec {
         checks = {
           # Build the crate as part of `nix flake check` for convenience
           inherit intertype;

@@ -13,7 +13,8 @@ description = "cross-language, change-aware type definitions"
 thiserror = "1"
 indexmap = "2"
 lasso = "0.7"
-nonempty = "0.9"
+nonempty = "0.10"
+pretty = "0.12"
 
 [dependencies.clap]
 version = "4"
