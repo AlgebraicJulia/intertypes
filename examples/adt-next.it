@@ -1,0 +1,10 @@
+data Term {
+  Plus(Term, Term),
+  Times(Term, Term),
+  Const(f64),
+  Var(string),
+}
+
+data Point {
+  Point { x: f64, y: f64 },
+}

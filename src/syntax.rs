@@ -224,6 +224,10 @@ Note: right now it is convenient to make [`TypeDecl`] a struct with some common
 parameters, and then the parts that vary between sum/record/alias extracted out
 to here. Maybe this isn't quite what we want: maybe we instead just want to have
 [`TypeDecl`] itself be an enum?
+
+Also: records should be a special case of sum. Like Haskell, we should just have
+different namespaces for constructors and types, so a constructor can have the
+same name as the type in the case there is only one constructor.
 */
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub enum TypeDeclBody {
